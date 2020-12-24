@@ -1,0 +1,18 @@
+syntax = "proto3";
+package factorio_blueprints.v1;
+option go_package = "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1;pb";
+
+import "factorio_blueprints/v1/item.proto";
+
+service ItemService {
+    rpc Import(ImportRequest) returns (ImportResponse) {}
+}
+
+message ImportRequest {
+    string string = 1;
+}
+
+message ImportResponse {
+    string id = 1;
+    Item item = 2;
+}

@@ -1,0 +1,8 @@
+type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+    - selector: factorio_blueprints.v1.ItemService.Import
+      post: /v1/items
+      body: "*"
