@@ -10,7 +10,9 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	pb "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1"
 	"loe.yt/factorio-blueprints/internal/service"
 )
@@ -23,51 +25,35 @@ func main() {
 		UseShortOptionHandling: true,
 
 		Commands: []*cli.Command{
-
 			{
-				Name:   "gateway",
-				Usage:  "Runs the grpc-gateway",
-				Action: gateway,
+				Name:        "server",
+				Usage:       "Runs the grpc-gateway and gRPC server together",
+				Description: "",
+				Action:      server,
 
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "disable-gateway",
+						Aliases: []string{"G"},
+					},
+					&cli.BoolFlag{
+						Name:    "grpc",
+						Aliases: []string{"g"},
+					},
 					&cli.IntFlag{
 						Name:    "port",
 						Value:   8080,
 						EnvVars: []string{"PORT"},
 					},
-					&cli.StringFlag{
-						Name:  "grpc-uri",
-						Value: "localhost:8081",
-						// Value:   "dns://localhost:8081",
-						EnvVars: []string{"GRPC_URI"},
-					},
-				},
-			},
-
-			{
-				Name:   "hybrid",
-				Usage:  "Runs the grpc-gateway and gRPC server together",
-				Action: hybrid,
-
-				Flags: []cli.Flag{
 					&cli.IntFlag{
-						Name:    "port",
+						Name:    "grpc-port",
 						Value:   8081,
-						EnvVars: []string{"PORT"},
+						EnvVars: []string{"GRPC_PORT"},
 					},
-				},
-			},
-
-			{
-				Name:   "server",
-				Usage:  "Runs the gRPC server",
-				Action: server,
-
-				Flags: []cli.Flag{
-					&cli.IntFlag{
-						Name:    "port",
-						Value:   8081,
-						EnvVars: []string{"PORT"},
+					&cli.BoolFlag{
+						Name:    "reflection",
+						Aliases: []string{"r"},
+						EnvVars: []string{"GRPC_REFLECTION"},
 					},
 				},
 			},
@@ -81,36 +67,44 @@ func main() {
 }
 
 func server(c *cli.Context) error {
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Int("port")))
-	if err != nil {
-		return err
-	}
-	s := grpc.NewServer()
-	pb.RegisterItemServiceServer(s, service.NewItemServiceServer())
-	return s.Serve(l)
-}
-
-func gateway(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-
-	err := pb.RegisterItemServiceHandlerFromEndpoint(ctx, mux, c.String("grpc-uri"), opts)
-	if err != nil {
-		return err
-	}
-
-	return http.ListenAndServe(":8080", mux)
-}
-
-func hybrid(c *cli.Context) error {
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Int("port")))
-	if err != nil {
-		return err
-	}
 	s := grpc.NewServer()
-	pb.RegisterItemServiceServer(s, service.NewItemServiceServer())
-	return s.Serve(l)
+	if c.Bool("reflection") {
+		reflection.Register(s)
+	}
+	mux := runtime.NewServeMux()
+
+	// ItemService
+	{
+		srv := service.NewItemServiceServer()
+		pb.RegisterItemServiceServer(s, srv)
+		err := pb.RegisterItemServiceHandlerServer(ctx, mux, srv)
+		if err != nil {
+			return err
+		}
+	}
+
+	var g errgroup.Group
+
+	g.Go(func() error {
+		if !c.Bool("grpc") {
+			return nil
+		}
+		l, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Int("grpc-port")))
+		if err != nil {
+			return err
+		}
+		return s.Serve(l)
+	})
+
+	g.Go(func() error {
+		if c.Bool("disable-gateway") {
+			return nil
+		}
+		return http.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")), mux)
+	})
+
+	return g.Wait()
 }
