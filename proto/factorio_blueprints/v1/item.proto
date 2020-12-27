@@ -6,9 +6,9 @@ import "factorio_blueprints/v1/blueprint.proto";
 import "factorio_blueprints/v1/blueprint_book.proto";
 
 message Item {
-    string import_string = 1 [json_name="import_string"];
+    string import_string = 1;
     oneof item {
         Blueprint blueprint = 2;
-        BlueprintBook blueprint_book = 3 [json_name="blueprint_book"];
+        BlueprintBook blueprint_book = 3;
     }
 }

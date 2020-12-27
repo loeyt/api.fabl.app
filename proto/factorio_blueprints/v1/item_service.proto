@@ -9,7 +9,7 @@ service ItemService {
 }
 
 message ImportRequest {
-    string import_string = 1 [json_name="import_string"];
+    string import_string = 1;
 }
 
 message ImportResponse {

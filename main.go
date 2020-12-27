@@ -13,6 +13,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 	pb "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1"
 	"loe.yt/factorio-blueprints/internal/service"
 )
@@ -74,7 +75,16 @@ func server(c *cli.Context) error {
 	if c.Bool("reflection") {
 		reflection.Register(s)
 	}
-	mux := runtime.NewServeMux()
+	mux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				UseProtoNames: true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
+	)
 
 	// ItemService
 	{
