@@ -9,10 +9,9 @@ service ItemService {
 }
 
 message ImportRequest {
-    string string = 1;
+    string import_string = 1 [json_name="import_string"];
 }
 
 message ImportResponse {
-    string id = 1;
-    Item item = 2;
+    Item item = 1;
 }

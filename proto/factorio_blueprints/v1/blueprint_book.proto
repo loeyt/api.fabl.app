@@ -1,0 +1,7 @@
+syntax = "proto3";
+package factorio_blueprints.v1;
+option go_package = "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1;pb";
+
+message BlueprintBook {
+    string id = 1;
+}

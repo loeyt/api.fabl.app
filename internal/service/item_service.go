@@ -13,7 +13,10 @@ type itemServiceServer struct {
 func (s *itemServiceServer) Import(ctx context.Context, in *pb.ImportRequest) (*pb.ImportResponse, error) {
 	return &pb.ImportResponse{
 		Item: &pb.Item{
-			Item: pb.Item_ITEM_UNSPECIFIED,
+			ImportString: in.ImportString,
+			Item: &pb.Item_BlueprintBook{
+				BlueprintBook: &pb.BlueprintBook{Id: "fake"},
+			},
 		},
 	}, nil
 }
