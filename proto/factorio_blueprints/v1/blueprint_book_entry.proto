@@ -1,0 +1,10 @@
+syntax = "proto3";
+package factorio_blueprints.v1;
+option go_package = "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1;pb";
+
+import "factorio_blueprints/v1/blueprint.proto";
+
+message BlueprintBookEntry {
+    uint64 index = 1;
+    Blueprint blueprint = 2;
+}

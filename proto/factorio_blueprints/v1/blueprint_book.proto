@@ -2,6 +2,15 @@ syntax = "proto3";
 package factorio_blueprints.v1;
 option go_package = "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1;pb";
 
+import "factorio_blueprints/v1/blueprint_book_entry.proto";
+
 message BlueprintBook {
-    string id = 1;
+    uint64 version = 1;
+    string item = 2;
+    string label = 3;
+    // Color label_color = 4;
+    // repeated Icon icons = 5;
+
+    uint64 active_index = 6;
+    repeated BlueprintBookEntry blueprints = 7;
 }
