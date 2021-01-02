@@ -2,16 +2,53 @@ syntax = "proto3";
 package factorio_blueprints.v1;
 option go_package = "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1;pb";
 
-import "factorio_blueprints/v1/item.proto";
+import "factorio_blueprints/v1/blueprint.proto";
+import "factorio_blueprints/v1/blueprint_book.proto";
 
 service ItemService {
+    rpc Export(ExportRequest) returns (ExportResponse) {}
+    rpc Get(GetRequest) returns (GetResponse) {}
     rpc Import(ImportRequest) returns (ImportResponse) {}
+    rpc List(ListRequest) returns (ListResponse) {}
 }
 
-message ImportRequest {
+message ExportRequest {
+    string id = 1;
+}
+
+message ExportResponse {
     string import_string = 1;
 }
 
+message GetRequest {
+    string id = 1;
+}
+
+message GetResponse {
+    oneof item {
+        Blueprint blueprint = 1;
+        BlueprintBook blueprint_book = 2;
+        // DeconstructionPlanner "deconstruction_planner" = 3;
+        // UpgradePlanner "upgrade_planner" = 4;
+        // ItemWithTags "item_with_tags" = 5;
+    }
+}
+
+message ImportRequest {
+    uint64 time_ms = 1;
+    string import_string = 2;
+}
+
 message ImportResponse {
-    Item item = 1;
+    string id = 1;
+}
+
+message ListRequest {}
+
+message ListResponse {
+    message Item {
+        string id = 1;
+        bytes sum = 2;
+    }
+    repeated Item items = 1;
 }

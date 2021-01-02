@@ -17,7 +17,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ItemServiceClient interface {
+	Export(ctx context.Context, in *ExportRequest, opts ...grpc.CallOption) (*ExportResponse, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Import(ctx context.Context, in *ImportRequest, opts ...grpc.CallOption) (*ImportResponse, error)
+	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 }
 
 type itemServiceClient struct {
@@ -26,6 +29,24 @@ type itemServiceClient struct {
 
 func NewItemServiceClient(cc grpc.ClientConnInterface) ItemServiceClient {
 	return &itemServiceClient{cc}
+}
+
+func (c *itemServiceClient) Export(ctx context.Context, in *ExportRequest, opts ...grpc.CallOption) (*ExportResponse, error) {
+	out := new(ExportResponse)
+	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/Export", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *itemServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+	out := new(GetResponse)
+	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *itemServiceClient) Import(ctx context.Context, in *ImportRequest, opts ...grpc.CallOption) (*ImportResponse, error) {
@@ -37,11 +58,23 @@ func (c *itemServiceClient) Import(ctx context.Context, in *ImportRequest, opts 
 	return out, nil
 }
 
+func (c *itemServiceClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ItemServiceServer is the server API for ItemService service.
 // All implementations must embed UnimplementedItemServiceServer
 // for forward compatibility
 type ItemServiceServer interface {
+	Export(context.Context, *ExportRequest) (*ExportResponse, error)
+	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Import(context.Context, *ImportRequest) (*ImportResponse, error)
+	List(context.Context, *ListRequest) (*ListResponse, error)
 	mustEmbedUnimplementedItemServiceServer()
 }
 
@@ -49,8 +82,17 @@ type ItemServiceServer interface {
 type UnimplementedItemServiceServer struct {
 }
 
+func (UnimplementedItemServiceServer) Export(context.Context, *ExportRequest) (*ExportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Export not implemented")
+}
+func (UnimplementedItemServiceServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
 func (UnimplementedItemServiceServer) Import(context.Context, *ImportRequest) (*ImportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Import not implemented")
+}
+func (UnimplementedItemServiceServer) List(context.Context, *ListRequest) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedItemServiceServer) mustEmbedUnimplementedItemServiceServer() {}
 
@@ -63,6 +105,42 @@ type UnsafeItemServiceServer interface {
 
 func RegisterItemServiceServer(s grpc.ServiceRegistrar, srv ItemServiceServer) {
 	s.RegisterService(&_ItemService_serviceDesc, srv)
+}
+
+func _ItemService_Export_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ItemServiceServer).Export(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/factorio_blueprints.v1.ItemService/Export",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ItemServiceServer).Export(ctx, req.(*ExportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ItemService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ItemServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/factorio_blueprints.v1.ItemService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ItemServiceServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _ItemService_Import_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -83,13 +161,43 @@ func _ItemService_Import_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ItemService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ItemServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/factorio_blueprints.v1.ItemService/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ItemServiceServer).List(ctx, req.(*ListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ItemService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "factorio_blueprints.v1.ItemService",
 	HandlerType: (*ItemServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Export",
+			Handler:    _ItemService_Export_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _ItemService_Get_Handler,
+		},
+		{
 			MethodName: "Import",
 			Handler:    _ItemService_Import_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _ItemService_List_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

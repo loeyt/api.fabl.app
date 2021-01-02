@@ -9,6 +9,8 @@ import (
 	"os"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -41,6 +43,11 @@ func main() {
 						Name:    "grpc",
 						Aliases: []string{"g"},
 					},
+					&cli.BoolFlag{
+						Name:    "reflection",
+						Aliases: []string{"r"},
+						EnvVars: []string{"GRPC_REFLECTION"},
+					},
 					&cli.IntFlag{
 						Name:    "port",
 						Value:   8080,
@@ -51,10 +58,9 @@ func main() {
 						Value:   8081,
 						EnvVars: []string{"GRPC_PORT"},
 					},
-					&cli.BoolFlag{
-						Name:    "reflection",
-						Aliases: []string{"r"},
-						EnvVars: []string{"GRPC_REFLECTION"},
+					&cli.StringFlag{
+						Name:    "db-dsn",
+						EnvVars: []string{"DB_DSN"},
 					},
 				},
 			},
@@ -70,6 +76,11 @@ func main() {
 func server(c *cli.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	db, err := sqlx.Connect("postgres", c.String("db-dsn"))
+	if err != nil {
+		return fmt.Errorf("failed to connect to db: %w", err)
+	}
 
 	s := grpc.NewServer()
 	if c.Bool("reflection") {
@@ -88,11 +99,12 @@ func server(c *cli.Context) error {
 
 	// ItemService
 	{
-		srv := service.NewItemServiceServer()
+		store := service.NewItemStore(db)
+		srv := service.NewItemServiceServer(store)
 		pb.RegisterItemServiceServer(s, srv)
 		err := pb.RegisterItemServiceHandlerServer(ctx, mux, srv)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to register handler: %w", err)
 		}
 	}
 
