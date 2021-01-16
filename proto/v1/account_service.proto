@@ -1,0 +1,47 @@
+syntax = "proto3";
+package fabl.v1;
+option go_package = "api.fabl.app/v1;pb";
+
+import "google/api/annotations.proto";
+import "v1/account.proto";
+
+service AccountService {
+    rpc CurrentAccount(CurrentAccountRequest) returns (CurrentAccountResponse) {
+        option (google.api.http) = {
+            get: "/v1/account"
+        };
+    }
+    rpc Login(LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/v1/account/login"
+            body: "*"
+        };
+    }
+    rpc Logout(LogoutRequest) returns (LogoutResponse) {
+        option (google.api.http) = {
+            post: "/v1/account/logout"
+            body: "*"
+        };
+    }
+}
+
+message CurrentAccountRequest {
+}
+
+message CurrentAccountResponse {
+    Account account = 1;
+}
+
+message LoginRequest {
+    string id = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+}
+
+message LogoutRequest {
+}
+
+message LogoutResponse {
+}

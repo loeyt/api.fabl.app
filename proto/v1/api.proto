@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+// Factorio Blueprints app
+package fabl.v1;
+option go_package = "api.fabl.app/v1;pb";
+
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  host: "api.fabl.app";
+};

@@ -8,16 +8,19 @@ import (
 	"net/http"
 	"os"
 
+	"api.fabl.app/internal/service"
+	"api.fabl.app/internal/session"
+	"api.fabl.app/internal/sql"
+	pb "api.fabl.app/v1"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
-	pb "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1"
-	"loe.yt/factorio-blueprints/internal/service"
 )
 
 func main() {
@@ -62,6 +65,13 @@ func main() {
 						Name:    "db-dsn",
 						EnvVars: []string{"DB_DSN"},
 					},
+					&cli.StringSliceFlag{
+						Name: "cors-allowed-origins",
+						Value: cli.NewStringSlice(
+							"http://localhost:*",
+						),
+						EnvVars: []string{"CORS_ALLOWED_ORIGINS"},
+					},
 				},
 			},
 		},
@@ -82,38 +92,25 @@ func server(c *cli.Context) error {
 		return fmt.Errorf("failed to connect to db: %w", err)
 	}
 
-	s := grpc.NewServer()
-	if c.Bool("reflection") {
-		reflection.Register(s)
-	}
-	mux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
-			MarshalOptions: protojson.MarshalOptions{
-				UseProtoNames: true,
-			},
-			UnmarshalOptions: protojson.UnmarshalOptions{
-				DiscardUnknown: true,
-			},
-		}),
+	var (
+		repo = sql.NewRepository(db)
+
+		itemSrv    = service.NewItemServiceServer(repo.Item)
+		accountSrv = service.NewAccountServiceServer(repo.Account)
+
+		g errgroup.Group
 	)
-
-	// ItemService
-	{
-		store := service.NewItemStore(db)
-		srv := service.NewItemServiceServer(store)
-		pb.RegisterItemServiceServer(s, srv)
-		err := pb.RegisterItemServiceHandlerServer(ctx, mux, srv)
-		if err != nil {
-			return fmt.Errorf("failed to register handler: %w", err)
-		}
-	}
-
-	var g errgroup.Group
 
 	g.Go(func() error {
 		if !c.Bool("grpc") {
 			return nil
 		}
+		s := grpc.NewServer()
+		if c.Bool("reflection") {
+			reflection.Register(s)
+		}
+		pb.RegisterItemServiceServer(s, itemSrv)
+		pb.RegisterAccountServiceServer(s, accountSrv)
 		l, err := net.Listen("tcp", fmt.Sprintf(":%d", c.Int("grpc-port")))
 		if err != nil {
 			return err
@@ -125,7 +122,41 @@ func server(c *cli.Context) error {
 		if c.Bool("disable-gateway") {
 			return nil
 		}
-		return http.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")), mux)
+
+		mux := runtime.NewServeMux(
+			runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+				MarshalOptions: protojson.MarshalOptions{
+					UseProtoNames: true,
+				},
+				UnmarshalOptions: protojson.UnmarshalOptions{
+					DiscardUnknown: true,
+				},
+			}),
+			runtime.WithForwardResponseOption(session.ForwardResponseOption),
+		)
+
+		errs := []error{
+			pb.RegisterItemServiceHandlerServer(ctx, mux, itemSrv),
+			pb.RegisterAccountServiceHandlerServer(ctx, mux, accountSrv),
+		}
+		for _, err := range errs {
+			if err != nil {
+				return fmt.Errorf("failed to register handler: %w", err)
+			}
+		}
+
+		cors := cors.New(cors.Options{
+			AllowedOrigins:   c.StringSlice("cors-allowed-origins"),
+			AllowedMethods:   []string{"GET", "POST"},
+			AllowCredentials: true,
+		})
+		return http.ListenAndServe(
+			fmt.Sprintf(":%d", c.Int("port")),
+			cors.Handler(
+				session.Wrap(mux, "session",
+					[]byte("some secret key for session signing"),
+					// base64.StdEncoding.DecodeString(""),
+				)))
 	})
 
 	return g.Wait()

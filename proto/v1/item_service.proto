@@ -1,0 +1,64 @@
+syntax = "proto3";
+package fabl.v1;
+option go_package = "api.fabl.app/v1;pb";
+
+import "google/api/annotations.proto";
+
+service ItemService {
+    rpc Export(ExportRequest) returns (ExportResponse) {
+        option (google.api.http) = {
+            get: "/v1/items/{id}/export"
+        };
+    }
+    rpc Get(GetRequest) returns (GetResponse) {
+        option (google.api.http) = {
+            get: "/v1/items/{id}"
+        };
+    }
+    rpc Import(ImportRequest) returns (ImportResponse) {
+        option (google.api.http) = {
+            post: "/v1/items"
+            body: "*"
+        };
+    }
+    rpc List(ListRequest) returns (ListResponse) {
+        option (google.api.http) = {
+            get: "/v1/items"
+        };
+    }
+}
+
+message ExportRequest {
+    string id = 1;
+}
+
+message ExportResponse {
+    string import_string = 1;
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message GetResponse {
+    bytes data = 1;
+}
+
+message ImportRequest {
+    uint64 time_ms = 1;
+    string import_string = 2;
+}
+
+message ImportResponse {
+    string id = 1;
+}
+
+message ListRequest {}
+
+message ListResponse {
+    message Item {
+        string id = 1;
+        bytes sum = 2;
+    }
+    repeated Item items = 1;
+}

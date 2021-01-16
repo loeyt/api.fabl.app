@@ -1,6 +1,6 @@
 syntax = "proto3";
-package factorio_blueprints.v1;
-option go_package = "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1;pb";
+package fabl.v1;
+option go_package = "api.fabl.app/v1;pb";
 
 message Blueprint {
     uint64 version = 1;

@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // ItemServiceClient is the client API for ItemService service.
@@ -33,7 +34,7 @@ func NewItemServiceClient(cc grpc.ClientConnInterface) ItemServiceClient {
 
 func (c *itemServiceClient) Export(ctx context.Context, in *ExportRequest, opts ...grpc.CallOption) (*ExportResponse, error) {
 	out := new(ExportResponse)
-	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/Export", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/fabl.v1.ItemService/Export", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (c *itemServiceClient) Export(ctx context.Context, in *ExportRequest, opts 
 
 func (c *itemServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/Get", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/fabl.v1.ItemService/Get", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func (c *itemServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grp
 
 func (c *itemServiceClient) Import(ctx context.Context, in *ImportRequest, opts ...grpc.CallOption) (*ImportResponse, error) {
 	out := new(ImportResponse)
-	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/Import", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/fabl.v1.ItemService/Import", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (c *itemServiceClient) Import(ctx context.Context, in *ImportRequest, opts 
 
 func (c *itemServiceClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, "/factorio_blueprints.v1.ItemService/List", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/fabl.v1.ItemService/List", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ type UnsafeItemServiceServer interface {
 }
 
 func RegisterItemServiceServer(s grpc.ServiceRegistrar, srv ItemServiceServer) {
-	s.RegisterService(&_ItemService_serviceDesc, srv)
+	s.RegisterService(&ItemService_ServiceDesc, srv)
 }
 
 func _ItemService_Export_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -117,7 +118,7 @@ func _ItemService_Export_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/factorio_blueprints.v1.ItemService/Export",
+		FullMethod: "/fabl.v1.ItemService/Export",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ItemServiceServer).Export(ctx, req.(*ExportRequest))
@@ -135,7 +136,7 @@ func _ItemService_Get_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/factorio_blueprints.v1.ItemService/Get",
+		FullMethod: "/fabl.v1.ItemService/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ItemServiceServer).Get(ctx, req.(*GetRequest))
@@ -153,7 +154,7 @@ func _ItemService_Import_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/factorio_blueprints.v1.ItemService/Import",
+		FullMethod: "/fabl.v1.ItemService/Import",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ItemServiceServer).Import(ctx, req.(*ImportRequest))
@@ -171,7 +172,7 @@ func _ItemService_List_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/factorio_blueprints.v1.ItemService/List",
+		FullMethod: "/fabl.v1.ItemService/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ItemServiceServer).List(ctx, req.(*ListRequest))
@@ -179,8 +180,11 @@ func _ItemService_List_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-var _ItemService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "factorio_blueprints.v1.ItemService",
+// ItemService_ServiceDesc is the grpc.ServiceDesc for ItemService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ItemService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "fabl.v1.ItemService",
 	HandlerType: (*ItemServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -201,5 +205,5 @@ var _ItemService_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "factorio_blueprints/v1/item_service.proto",
+	Metadata: "v1/item_service.proto",
 }

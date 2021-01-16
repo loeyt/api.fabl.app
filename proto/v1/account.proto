@@ -1,0 +1,8 @@
+syntax = "proto3";
+package fabl.v1;
+option go_package = "api.fabl.app/v1;pb";
+
+message Account {
+    string id = 1;
+    string nickname = 2;
+}

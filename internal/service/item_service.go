@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 
+	"api.fabl.app/internal/repository"
+	"api.fabl.app/internal/session"
+	pb "api.fabl.app/v1"
 	"github.com/oklog/ulid/v2"
-	pb "loe.yt/factorio-blueprints/internal/pb/factorio_blueprints/v1"
 )
 
 type itemServiceServer struct {
-	store ItemStore
+	repo repository.ItemRepository
 
 	pb.UnimplementedItemServiceServer
 }
@@ -18,22 +20,45 @@ func (s *itemServiceServer) Export(ctx context.Context, in *pb.ExportRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	data, err := s.store.GetData(ctx, id)
+	item, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	importString, err := compressItemData(item.Data)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.ExportResponse{
-		ImportString: string(data),
+		ImportString: importString,
+	}, nil
+}
+
+func (s *itemServiceServer) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetResponse, error) {
+	id, err := ulid.Parse(in.Id)
+	if err != nil {
+		return nil, err
+	}
+	item, err := s.repo.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetResponse{
+		Data: item.Data,
 	}, nil
 }
 
 func (s *itemServiceServer) Import(ctx context.Context, in *pb.ImportRequest) (*pb.ImportResponse, error) {
-	data, err := extractItemData(in.ImportString)
+	accountID, err := session.Account(ctx)
+	if err != nil {
+		return nil, err
+	}
+	item := &repository.Item{AccountID: accountID, TimeMs: in.TimeMs}
+	err = item.Import(in.ImportString)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: more validation here, see history for example.
-	item, err := s.store.Create(ctx, data, in.TimeMs)
+	err = s.repo.Create(ctx, item)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +68,14 @@ func (s *itemServiceServer) Import(ctx context.Context, in *pb.ImportRequest) (*
 }
 
 func (s *itemServiceServer) List(ctx context.Context, in *pb.ListRequest) (*pb.ListResponse, error) {
-	items, err := s.store.List(ctx)
+	accountID, err := session.Account(ctx)
+	if err != nil {
+		// TODO: when public items exist: change this
+		return &pb.ListResponse{
+			Items: []*pb.ListResponse_Item{},
+		}, nil
+	}
+	items, err := s.repo.List(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +83,7 @@ func (s *itemServiceServer) List(ctx context.Context, in *pb.ListRequest) (*pb.L
 	for i, item := range items {
 		pbItems[i] = &pb.ListResponse_Item{
 			Id:  item.ULID.String(),
-			Sum: item.Sum[:],
+			Sum: item.Sum256[:],
 		}
 	}
 	return &pb.ListResponse{
@@ -60,8 +92,8 @@ func (s *itemServiceServer) List(ctx context.Context, in *pb.ListRequest) (*pb.L
 }
 
 // NewItemServiceServer initializes an ItemServiceServer.
-func NewItemServiceServer(store ItemStore) pb.ItemServiceServer {
+func NewItemServiceServer(repo repository.ItemRepository) pb.ItemServiceServer {
 	return &itemServiceServer{
-		store: store,
+		repo: repo,
 	}
 }
