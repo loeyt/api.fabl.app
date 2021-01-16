@@ -15,18 +15,17 @@ import (
 )
 
 type Item struct {
-	ULID      ulid.ULID
-	AccountID uuid.UUID
-	TimeMs    uint64
-	Data      []byte
+	ULID   ulid.ULID
+	TimeMs uint64
+	Data   []byte
 	// Sum256 should be present when queried without Data.
 	Sum256 *[32]byte
 }
 
 type ItemRepository interface {
-	Get(ctx context.Context, id ulid.ULID) (*Item, error)
-	GetData(ctx context.Context, sum256 [32]byte) ([]byte, error)
-	Create(ctx context.Context, item *Item) error
+	Get(ctx context.Context, accountID uuid.UUID, id ulid.ULID) (*Item, error)
+	GetData(ctx context.Context, accountID uuid.UUID, sum256 [32]byte) ([]byte, error)
+	Create(ctx context.Context, accountID uuid.UUID, item *Item) error
 	List(ctx context.Context, accountID uuid.UUID) ([]*Item, error)
 }
 

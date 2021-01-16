@@ -18,7 +18,7 @@ type itemRepo struct {
 	db *sqlx.DB
 }
 
-func (r *itemRepo) Get(ctx context.Context, id ulid.ULID) (*repository.Item, error) {
+func (r *itemRepo) Get(ctx context.Context, accountID uuid.UUID, id ulid.ULID) (*repository.Item, error) {
 	v := struct {
 		Data      []byte    `db:"item_data"`
 		AccountID uuid.UUID `db:"account_id"`
@@ -30,17 +30,16 @@ func (r *itemRepo) Get(ctx context.Context, id ulid.ULID) (*repository.Item, err
 			item
 			INNER JOIN item_data ON item.sum256 = item_data.sum256
 		WHERE
-			id = $1;
-	`, id)
+			account_id = $1 AND id = $2;
+	`, accountID, id)
 	return &repository.Item{
-		ULID:      id,
-		AccountID: v.AccountID,
-		TimeMs:    id.Time(),
-		Data:      v.Data,
+		ULID:   id,
+		TimeMs: id.Time(),
+		Data:   v.Data,
 	}, err
 }
 
-func (r *itemRepo) Create(ctx context.Context, item *repository.Item) error {
+func (r *itemRepo) Create(ctx context.Context, accountID uuid.UUID, item *repository.Item) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -81,7 +80,7 @@ func (r *itemRepo) Create(ctx context.Context, item *repository.Item) error {
 			item (id, sum256, account_id)
 		VALUES
 			($1, $2, $3);`,
-		item.ULID[:], item.Sum256[:], item.AccountID,
+		item.ULID[:], item.Sum256[:], accountID,
 	)
 	if err != nil {
 		return err
@@ -109,15 +108,15 @@ func (r *itemRepo) List(ctx context.Context, accountID uuid.UUID) ([]*repository
 	items := make([]*repository.Item, len(v))
 	for i, item := range v {
 		items[i] = &repository.Item{
-			ULID:      item.ULID,
-			AccountID: item.AccountID,
-			Sum256:    new([32]byte),
+			ULID:   item.ULID,
+			TimeMs: item.ULID.Time(),
+			Sum256: new([32]byte),
 		}
 		copy(items[i].Sum256[:], item.Sum256)
 	}
 	return items, err
 }
 
-func (r *itemRepo) GetData(ctx context.Context, sum256 [32]byte) ([]byte, error) {
+func (r *itemRepo) GetData(ctx context.Context, accountID uuid.UUID, sum256 [32]byte) ([]byte, error) {
 	return nil, status.Errorf(codes.Unimplemented, "sql.itemRepo method GetData not implemented")
 }

@@ -5,9 +5,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build
+RUN go build ./cmd/fabl
 
 FROM gcr.io/distroless/base-debian10
-COPY --from=build /app/api.fabl.app /
-ENTRYPOINT [ "/api.fabl.app" ]
+COPY --from=build /app/fabl /
+ENTRYPOINT [ "/fabl" ]
 CMD [ "server" ]

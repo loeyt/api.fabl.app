@@ -16,15 +16,19 @@ type itemServiceServer struct {
 }
 
 func (s *itemServiceServer) Export(ctx context.Context, in *pb.ExportRequest) (*pb.ExportResponse, error) {
+	accountID, err := session.Account(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := ulid.Parse(in.Id)
 	if err != nil {
 		return nil, err
 	}
-	item, err := s.repo.Get(ctx, id)
+	item, err := s.repo.Get(ctx, accountID, id)
 	if err != nil {
 		return nil, err
 	}
-	importString, err := compressItemData(item.Data)
+	importString, err := item.Export()
 	if err != nil {
 		return nil, err
 	}
@@ -34,11 +38,15 @@ func (s *itemServiceServer) Export(ctx context.Context, in *pb.ExportRequest) (*
 }
 
 func (s *itemServiceServer) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetResponse, error) {
+	accountID, err := session.Account(ctx)
+	if err != nil {
+		return nil, err
+	}
 	id, err := ulid.Parse(in.Id)
 	if err != nil {
 		return nil, err
 	}
-	item, err := s.repo.Get(ctx, id)
+	item, err := s.repo.Get(ctx, accountID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +60,13 @@ func (s *itemServiceServer) Import(ctx context.Context, in *pb.ImportRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	item := &repository.Item{AccountID: accountID, TimeMs: in.TimeMs}
+	item := &repository.Item{TimeMs: in.TimeMs}
 	err = item.Import(in.ImportString)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: more validation here, see history for example.
-	err = s.repo.Create(ctx, item)
+	err = s.repo.Create(ctx, accountID, item)
 	if err != nil {
 		return nil, err
 	}
