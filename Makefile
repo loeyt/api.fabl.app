@@ -6,7 +6,7 @@ V1_OTHER_PROTOS = $(filter-out $(V1_SERVICES), $(V1_PROTOS))
 
 vpath %.proto proto
 
-all: $(patsubst %.proto, %.pb.go, $(V1_OTHER_PROTOS) $(V1_SERVICES)) $(patsubst %.proto, %.pb.gw.go, $(V1_SERVICES)) v1.swagger.json
+all: $(patsubst %.proto, %.pb.go, $(V1_OTHER_PROTOS) $(V1_SERVICES)) $(patsubst %.proto, %.pb.gw.go, $(V1_SERVICES)) internal/embed/v1.swagger.json
 .PHONY: all
 
 %.pb.go : %.proto
@@ -23,9 +23,9 @@ all: $(patsubst %.proto, %.pb.go, $(V1_OTHER_PROTOS) $(V1_SERVICES)) $(patsubst 
 		--grpc-gateway_opt paths=source_relative \
 		$<
 
-v1.swagger.json: $(V1_PROTOS)
+internal/embed/v1.swagger.json: $(V1_PROTOS)
 	protoc -I proto \
-		--openapiv2_out . \
+		--openapiv2_out internal/embed \
 		--openapiv2_opt logtostderr=true \
 		--openapiv2_opt allow_merge=true \
 		--openapiv2_opt json_names_for_fields=false \

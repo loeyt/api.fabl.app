@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"api.fabl.app/internal/embed"
 	"api.fabl.app/internal/service"
 	"api.fabl.app/internal/session"
 	"api.fabl.app/internal/sql"
@@ -144,6 +145,10 @@ func server(c *cli.Context) error {
 				return fmt.Errorf("failed to register handler: %w", err)
 			}
 		}
+
+		mux.HandlePath(http.MethodGet, "/v1/swagger.json", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+			embed.HandlerFunc(w, r)
+		})
 
 		cors := cors.New(cors.Options{
 			AllowedOrigins:   c.StringSlice("cors-allowed-origins"),
