@@ -169,5 +169,5 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/account_service.proto",
+	Metadata: "fabl/v1/account_service.proto",
 }

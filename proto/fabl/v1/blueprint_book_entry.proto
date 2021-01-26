@@ -1,8 +1,8 @@
 syntax = "proto3";
 package fabl.v1;
-option go_package = "api.fabl.app/v1;pb";
+option go_package = "api.fabl.app/pb/fabl/v1;pb";
 
-import "v1/blueprint.proto";
+import "fabl/v1/blueprint.proto";
 
 message BlueprintBookEntry {
     uint64 index = 1;

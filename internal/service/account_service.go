@@ -5,7 +5,7 @@ import (
 
 	"api.fabl.app/internal/repository"
 	"api.fabl.app/internal/session"
-	pb "api.fabl.app/v1"
+	pb "api.fabl.app/pb/fabl/v1"
 	"github.com/google/uuid"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"google.golang.org/grpc/codes"

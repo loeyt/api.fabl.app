@@ -1,0 +1,14 @@
+version: v1beta1
+plugins:
+  - name: go
+    out: pb
+    opt: paths=source_relative
+  - name: go-grpc
+    out: pb
+    opt: paths=source_relative
+  - name: grpc-gateway
+    out: pb
+    opt: paths=source_relative,logtostderr=true
+  - name: openapiv2
+    out: internal/embed
+    opt: json_names_for_fields=false,allow_merge=true,merge_file_name=api,logtostderr=true

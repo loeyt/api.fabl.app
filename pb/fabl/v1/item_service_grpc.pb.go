@@ -205,5 +205,5 @@ var ItemService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "v1/item_service.proto",
+	Metadata: "fabl/v1/item_service.proto",
 }

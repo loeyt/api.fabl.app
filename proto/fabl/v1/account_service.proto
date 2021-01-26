@@ -1,9 +1,9 @@
 syntax = "proto3";
 package fabl.v1;
-option go_package = "api.fabl.app/v1;pb";
+option go_package = "api.fabl.app/pb/fabl/v1;pb";
 
 import "google/api/annotations.proto";
-import "v1/account.proto";
+import "fabl/v1/account.proto";
 
 service AccountService {
     rpc CurrentAccount(CurrentAccountRequest) returns (CurrentAccountResponse) {

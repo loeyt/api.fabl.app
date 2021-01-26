@@ -5,7 +5,7 @@ import (
 
 	"api.fabl.app/internal/repository"
 	"api.fabl.app/internal/session"
-	pb "api.fabl.app/v1"
+	pb "api.fabl.app/pb/fabl/v1"
 	"github.com/oklog/ulid/v2"
 )
 

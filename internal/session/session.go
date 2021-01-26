@@ -28,35 +28,34 @@ var (
 )
 
 type middleware struct {
-	*runtime.ServeMux
-	*sessions.CookieStore
-	name string
+	mux *runtime.ServeMux
+	cn  string
+	cs  *sessions.CookieStore
 }
 
 // Wrap a runtime.ServeMux to use Cookie based authentication. Should be
 // combined with ForwardResponseOption.
-func Wrap(mux *runtime.ServeMux, name string, keyPairs ...[]byte) http.Handler {
+func Wrap(mux *runtime.ServeMux, cookieName string, cs *sessions.CookieStore) http.Handler {
 	return &middleware{
-		ServeMux:    mux,
-		CookieStore: sessions.NewCookieStore(keyPairs...),
-		name:        "session",
+		mux: mux,
+		cs:  cs,
+		cn:  cookieName,
 	}
 }
 
 func (m *middleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Disable session handling if the Authorization handler is being used.
 	if r.Header.Get("Authorization") != "" {
-		m.ServeMux.ServeHTTP(w, r)
+		m.mux.ServeHTTP(w, r)
 		return
 	}
-	session, err := m.CookieStore.Get(r, m.name)
+	session, err := m.cs.Get(r, m.cn)
 	if err != nil {
 		// TODO: log it?
-		m.ServeMux.ServeHTTP(w, r)
+		m.mux.ServeHTTP(w, r)
 		return
 	}
-	session.Options.HttpOnly = true
-	m.ServeMux.ServeHTTP(w, r.WithContext(
+	m.mux.ServeHTTP(w, r.WithContext(
 		context.WithValue(r.Context(), ckSession, session)),
 	)
 }
